@@ -1,23 +1,29 @@
 
+//importacion del driver y gestor de ObjectId
 import { MongoClient, ObjectId } from "mongodb";
-import dotenv from "dotenv"; //permite controlar la url de conexion a mongo desde .env
 
+//permite controlar la url de conexion a mongo desde .env
+import dotenv from "dotenv"; 
 dotenv.config();
 
+//importaciones que van a permitir interactuar con el usuario coninputs
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
 const rl = createInterface({ input, output });
-
+//funcion para introducir informacion con un input
 async function preguntar(mensaje) {
     return await rl.question(mensaje);
 }
 
-
+//coneccion con el servidor y la base de datos
 const url = process.env.MONGODB_URI;
 const dbName = process.env.DB_NAME;
-
 const client = new MongoClient(url);
+
+//=================================
+// FUNCIONES CRUD
+//=================================
 
 // ==== CRUD CATEGORIAS =============================================================== //
 
@@ -365,6 +371,7 @@ async function eliminarUsuario(db, id) {
 
     console.log("Usuario eliminado lógicamente.");
     console.log("Documentos modificados: ", resultado.modifiedCount);
+    return true;
 }
 
 // ==== CRUD PEDIDOS =============================================================== //
@@ -458,7 +465,6 @@ async function obtenerPedidos(db) {
 
 // 3. Actualizar estado del pedido (UPDATE)
 async function actualizarEstadoPedido(db, id, nuevoEstado) {
-    const { ObjectId } = await import("mongodb");
 
     const resultado = await db
         .collection("pedidos")
@@ -483,8 +489,7 @@ async function actualizarEstadoPedido(db, id, nuevoEstado) {
 
 // 4. Eliminar pedido (DELETE lógico)
 async function eliminarPedido(db, id) {
-    const { ObjectId } = await import("mongodb");
-
+    
     const resultado = await db
         .collection("pedidos")
         .updateOne(
@@ -508,6 +513,9 @@ async function eliminarPedido(db, id) {
     console.log("Documentos modificados: ", resultado.modifiedCount);
     return true;
 }
+//========================================
+// MENUS PARA INTERACCIÓN
+//========================================
 
 // === MENU DE INICIO ===================================== //
 
@@ -800,25 +808,142 @@ async function menuUsuarios(db) {
                     console.log("Opción inválida. Intente nuevamente.");
             }
         } catch (error) {
-            console.error(
-                "No se pudo completar la operación:", error);
+            console.error("No se pudo completar la operación:", error);
+        }
+    }
+}
+
+// ======== SUB MENU para gestion de PEDIDOS ========
+async function menuPedidos(db) {
+    let opcion = "";
+
+    while (opcion !== "0") {
+        console.log("\n   ====== GESTIÓN DE PEDIDOS ======");
+        console.log("   1. Crear pedido");
+        console.log("   2. Listar pedidos");
+        console.log("   3. Actualizar estado pedido");
+        console.log("   4. Eliminar pedido");
+        console.log("   0. Volver al menú principal");
+        console.log("   =================================");
+
+        opcion = await preguntar("      Seleccione una opción: ");
+
+        try{
+            switch (opcion) {
+                case "1": {
+                    console.log("\nCREAR NUEVO PEDIDO");
+                    const usuarioId = await preguntar("ID del usuario: ");
+
+                    const itemsPedido = [];
+                    let agregarOtro = "s";
+                    
+                    while (agregarOtro.toLowerCase() === "s") {
+                        console.log("\n  AGREGAR PRODUCTO AL PEDIDO:");
+
+                        const productId = await preguntar("ID del producto: ");
+                        const cantidadTexto = await preguntar("Cantidad: ");
+                        const cantidad = Number(cantidadTexto);
+
+                        if(!Number.isInteger(cantidad)|| cantidad <=0) {
+                            console.log("La cantidad debe ser un numero entero mayor que cero.")
+                            continue;
+                        }
+
+                        itemsPedido.push({productoId, cantidad});
+
+                        agregarOtro = await preguntar( "Desea agregar otro producto? (s/n)");
+                    }
+
+                    if (itemsPedido.length === 0) {
+                        console.log("No se puede crear un pedido sin productos.");
+                        break;
+                    }
+
+                    await crearPedido(db, usuarioId,itemsPedido);
+                    break;
+                }
+                case "2": {
+                    await obtenerPedidos(db);
+                    break;
+                }
+                case "3": {
+                    console.log("\nACTUALIZAR ESTADO DE UN PEDIDO");
+                    const id = await preguntar("ID del pedido: ");
+                    
+                    console.log("\nSeleccione el nuevo estado:");
+                    console.log("1. PENDIENTE");
+                    console.log("2. CONFIRMADO");
+                    console.log("3. TERMINADO");
+                    console.log("4. CANCELADO");
+                    console.log("0. Volver");
+                    
+                    const opcionEstado = await preguntar("Selecciones una opción: ");
+                    let nuevoEstado;
+
+                    switch(opcionEstado) {
+                        case "1":
+                            nuevoEstado = "PENDIENTE";
+                            break;
+                        case "2":
+                            nuevoEstado = "CONFIRMADO";
+                            break;
+                        case "3":
+                            nuevoEstado = "TERMINADO";
+                            break;
+                        case "4":
+                            nuevoEstado = "CANCELADO";
+                            break;
+                        case "0":
+                            console.log("Operación cancelada.");
+                            break;
+                        default:
+                            console.log("Opción inválida, operación cancelada.");
+                            break;
+                    }
+
+                    if (nuevoEstado) {
+                        await actualizarEstadoPedido(db,id, nuevoEstado);
+                    }
+                    break;
+                } 
+                case "4": {
+                    console.log("\nELIMINAR PEDIDO");
+                    const id = await preguntar("ID del pedido a eliminar: ");
+                    
+                    await eliminarPedido(db,id);
+                    break;
+                }
+                case "0": 
+                    console.log("Volviendo al menú principal...");
+                    break;
+                
+                default:
+                    console.log("Opción inválida. Intente nuevamente.");
+
+            }
+
+
+
+        } catch (error) {
+            console.error("No se pudo completar la operación:", error);
         }
     }
 }
 
 
-//=========== MAIN ========================================================================//
+//==============================================================
+//   MAIN ejecución del programa
+//==============================================================
 
 async function main() {
+    //conectar con el servidor base de datos de mongoDB
     await client.connect();
-
-        // inicialización de la aplicación
         console.log("Conexión exitosa al servidor MongoDB");
-
+        //seleccion o creación de la bd
         const db = client.db(dbName);
         console.log(`Base de datos seleccionada: ${dbName}`);
 
-        // Colecciones que utiliza la BD
+        // Colecciones que utiliza la BD 
         const colecciones = [
             "categorias",
             "productos",
@@ -826,6 +951,7 @@ async function main() {
             "pedidos"
         ];
 
+        //comprobación de la existencia de las colecciones
         const existentes = await db
             .listCollections({}, { nameOnly: true })
             .toArray();
@@ -838,16 +964,17 @@ async function main() {
             if (!nombresExistentes.includes(nombre)) {
                 await db.createCollection(nombre);
                 console.log(`Colección creada: ${nombre}`);
-                console.log("Configuración inicial completada.")
             } else {
                 console.log(`La colección ya existe: ${nombre}`);
-                console.log("Configuración inicial completada.")
+                
             }
         }
+        console.log("Configuración inicial completada.")
 
-        // ========================================================================================== //
+        // ==========
         //EJECUCION DEL MENU INICIAL
-        console.log("BIENVENIDO AL SISTEMA DE GESTION DE FOOD STORE")
+
+        console.log("\n ======== BIENVENIDO AL SISTEMA DE GESTION DE FOOD STORE ========")
         await menuPrincipal(db);
         
     }
@@ -857,10 +984,10 @@ async function main() {
 try {
      await main();
 } catch (error) {
-    console.error("Error en la aplicación:", error);
+    console.error("   Error en la aplicación:", error);
 } finally {
     await client.close();
-    console.log("Conexión con la base de datos cerrada. Hasta la próxima!");
+    console.log("   Conexión con la base de datos cerrada. Hasta la próxima!");
     rl.close();
 }
 
