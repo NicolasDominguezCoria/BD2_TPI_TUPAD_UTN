@@ -4,6 +4,16 @@ import dotenv from "dotenv"; //permite controlar la url de conexion a mongo desd
 
 dotenv.config();
 
+import { createInterface } from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
+
+const rl = createInterface({ input, output });
+
+async function preguntar(mensaje) {
+    return await rl.question(mensaje);
+}
+
+
 const url = process.env.MONGODB_URI;
 const dbName = process.env.DB_NAME;
 
@@ -429,9 +439,6 @@ async function crearPedido(db, usuarioId, itemsPedido) {
 
     return resultado.insertedId;
 
-    
-
-    
 }
 
 // 2. Obtener pedidos (READ)
@@ -502,6 +509,304 @@ async function eliminarPedido(db, id) {
     return true;
 }
 
+// === MENU DE INICIO ===================================== //
+
+async function menuPrincipal(db) {
+    let opcion = "";
+
+    while (opcion !== "0") {
+        console.log("\n========== MENU PRINCIPAL ==========");
+        console.log("1. Gestionar categorías");
+        console.log("2. Gestionar productos");
+        console.log("3. Gestionar usuarios");
+        console.log("4. Gestionar pedidos");
+        console.log("0. Salir");
+        console.log("================================");
+
+        opcion = await preguntar("Seleccione una opción: ");
+
+        switch (opcion) {
+            case "1":
+                await menuCategorias(db);
+                break;
+
+            case "2":
+                await menuProductos(db);
+                break;
+
+            case "3":
+                await menuUsuarios(db);
+                break;
+
+            case "4":
+                await menuPedidos(db);
+                break;
+
+            case "0":
+                console.log("Saliendo del programa...");
+                break;
+
+            default:
+                console.log("Opción inválida. Intente nuevamente.");
+        }
+    }
+}
+
+// ======== SUB MENU para gestion de CATEGORIAS ======== 
+async function menuCategorias(db) {
+    let opcion = "";
+
+    while( opcion !== "0") {
+        console.log("\n   ====== GESTIÓN DE CATEGORÍAS ======");
+        console.log("   1. Crear categoría");
+        console.log("   2. Listar categorías");
+        console.log("   3. Actualizar categoría");
+        console.log("   4. Eliminar categoría");
+        console.log("   0. Volver al menú principal");
+        console.log("   ==================================");
+
+        opcion = await preguntar("      Seleccione una opción: ");
+
+        try {
+            switch (opcion) {
+                case "1": {
+                    console.log("\nCREAR NUEVA CATEGORIA")
+                    const nombre = await preguntar("Nombre: ");
+                    const descripcion = await preguntar("Descripción: ")
+
+                    await crearCategoria(db, nombre, descripcion);
+                    break;
+                }
+                case "2": {   
+                    await obtenerCategorias(db);
+                    break;
+                }
+                case "3": {
+                    console.log("\nACTUALIZAR CATEGORIA")
+                    const id = await preguntar("ID de la categoría: ");
+                    const nuevoNombre = await preguntar("Nuevo Nombre: ");
+                    const nuevaDescripcion = await preguntar("Nueva descripción: ");
+
+                    await actualizarCategoria(db,id,nuevoNombre,nuevaDescripcion);
+                    break;
+                }
+                case "4": {
+                    console.log("\nELIMINAR UNA CATEGORIA")
+                    const id = await preguntar("ID de la categoria a eliminar: ");
+
+                    await eliminarCategoria(db,id);
+                    break;
+                }
+                case "0": 
+                    console.log("Volviendo al menú principal...");
+                    break;
+                
+                default:
+                    console.log("Opción inválida. Intente nuevamente.");
+                
+            }
+        } catch (error) {
+            console.log("No se pudo completar la operación: ", error);
+        }
+    }
+}
+
+// ======== SUB MENU para gestion de PRODUCTOS ======== 
+async function menuProductos(db) {
+    let opcion = "";
+
+    while (opcion !== "0") {
+        console.log("\n   ====== GESTIÓN DE PRODUCTOS ======");
+        console.log("   1. Crear producto");
+        console.log("   2. Listar productos");
+        console.log("   3. Actualizar producto");
+        console.log("   4. Eliminar producto");
+        console.log("   0. Volver al menú principal");
+        console.log("   ==================================");
+    
+        opcion = await preguntar("      Seleccione una opción: ")
+
+        try{
+            switch (opcion) {
+                    case "1": {
+                        console.log("\nCREAR NUEVO PRODUCTO")
+                        const nombre = await preguntar("Nombre: ");
+                        const precio = Number(await preguntar("Precio: "));
+                        const descripcion = await preguntar("Descripción: ");
+                        const stock = Number(await preguntar("Stock: "));
+                        const imagen = await preguntar("Nombre o ruta de la imagen: "); 
+
+                        const disponible = stock > 0;
+                        
+                        const categoriasTexto = await preguntar(
+                            "IDs de categorías separados por coma: "
+                        );
+
+                        const idsCategorias = categoriasTexto
+                            .split(",")
+                            .map(id => id.trim())
+                            .filter(id => id !== "");
+
+                        await crearProducto(
+                            db,
+                            nombre,
+                            precio,
+                            descripcion,
+                            stock,
+                            imagen,
+                            disponible,
+                            idsCategorias
+                        );
+                        break;
+                    }
+
+                    case "2":
+                        await obtenerProductos(db);
+                        break;
+
+                    case "3": {
+                        console.log("\nACTUALIZAR UN PRODUCTO")
+                        const id = await preguntar("ID del producto: ");
+                        const nuevoNombre = await preguntar("Nuevo nombre: ");
+                        const nuevoPrecio = Number(await preguntar("Nuevo precio: "));
+                        const nuevaDescripcion = await preguntar("Nueva descripción: ");
+                        const nuevoStock = Number(await preguntar("Nuevo stock: "));
+                        const nuevaImagen = await preguntar("Nombre o ruta de la nueva imagen: ");
+                        
+                        const nuevoDisponible = nuevoStock > 0;
+                        
+                        const categoriasTexto = await preguntar(
+                            "Nuevos IDs de categorías separados por coma: "
+                        );
+
+                        const nuevoIdsCategorias = categoriasTexto
+                            .split(",")
+                            .map(id => id.trim())
+                            .filter(id => id !== "");
+
+                        await actualizarProducto(
+                            db,
+                            id,
+                            nuevoNombre,
+                            nuevoPrecio,
+                            nuevaDescripcion,
+                            nuevoStock,
+                            nuevaImagen,
+                            nuevoDisponible,
+                            nuevoIdsCategorias
+                        );
+                        break;
+                    }
+
+                    case "4": {
+                        console.log("\nELIMINAR UN PRODUCTO")
+                        const id = await preguntar(
+                            "ID del producto que desea eliminar: "
+                        );
+                        await eliminarProducto(db, id);
+                        break;
+                    }
+
+                    case "0":
+                        console.log("Volviendo al menú principal...");
+                        break;
+
+                    default:
+                        console.log("Opción inválida. Intente nuevamente.");
+                }
+        } catch (error) {
+            console.error("No se pudo completar la operación.", error);
+        }
+    }
+}
+
+// ======== SUB MENU para gestion de USUARIOS ========
+async function menuUsuarios(db) {
+    let opcion = "";
+
+    while (opcion !== "0") {
+        console.log("\n   ====== GESTIÓN DE USUARIOS ======");
+        console.log("   1. Crear usuario");
+        console.log("   2. Listar usuarios");
+        console.log("   3. Actualizar usuario");
+        console.log("   4. Eliminar usuario");
+        console.log("   0. Volver al menú principal");
+        console.log("   =================================");
+
+        opcion = await preguntar("      Seleccione una opción: ");
+
+        try {
+            switch (opcion) {
+                case "1": {
+                    console.log("\nCREAR NUEVO USUARIO");
+
+                    const nombreCompleto = await preguntar("Nombre completo: ");
+                    const email = await preguntar("Email: ");
+                    const telefono = await preguntar("Teléfono: ");
+                    const direccion = await preguntar("Dirección: ");
+                    const rol = await preguntar("Rol (cliente/administrador): ");
+
+                    await crearUsuario(
+                        db,
+                        nombreCompleto,
+                        email,
+                        telefono,
+                        direccion,
+                        rol
+                    );
+                    break;
+                }
+
+                case "2":
+                    await obtenerUsuarios(db);
+                    break;
+
+                case "3": {
+                    console.log("\nACTUALIZAR USUARIO");
+
+                    const id = await preguntar("ID del usuario: ");
+                    const nuevoNombreCompleto = await preguntar("Nuevo nombre completo: ");
+                    const nuevoEmail = await preguntar("Nuevo email: ");
+                    const nuevoTelefono = await preguntar("Nuevo teléfono: ");
+                    const nuevaDireccion = await preguntar("Nueva dirección: ");
+                    const nuevoRol = await preguntar("Nuevo rol (cliente/administrador): ");
+
+                    await actualizarUsuario(
+                        db,
+                        id,
+                        nuevoNombreCompleto,
+                        nuevoEmail,
+                        nuevoTelefono,
+                        nuevaDireccion,
+                        nuevoRol
+                    );
+                    break;
+                }
+
+                case "4": {
+                    console.log("\nELIMINAR USUARIO");
+
+                    const id = await preguntar("ID del usuario que desea eliminar: ");
+
+                    await eliminarUsuario(db, id);
+                    break;
+                }
+
+                case "0":
+                    console.log("Volviendo al menú principal...");
+                    break;
+
+                default:
+                    console.log("Opción inválida. Intente nuevamente.");
+            }
+        } catch (error) {
+            console.error(
+                "No se pudo completar la operación:", error);
+        }
+    }
+}
+
+
 //=========== MAIN ========================================================================//
 
 async function main() {
@@ -541,131 +846,21 @@ async function main() {
         }
 
         // ========================================================================================== //
-        //EJECUCION DEL CRUD DE CATEGORIAS
-        //cración e inserción de categorías
-        await crearCategoria(db, "Pizzas", "Categorías de pizzas");
-
-        //consulta de categorías en la db
-        await obtenerCategorias(db);
-
-        //modificacion de una categoria por su id
-        await actualizarCategoria(
-            db,
-            "PEGAR_AQUI_EL_ID",
-            "Pizzas artesanales",
-            "Pizzas elaboradas de forma artesanal"
-        );
-
-        //eliminar una categoría por su id
-        await eliminarCategoria(
-            db,
-            "PEGAR_AQUI_EL_ID"
-        );
-
-        // ========================================================================================== //
-        //EJECUCION DEL CRUD DE PRODUCTOS
-        await crearProducto(
-            db,
-            "Pizza muzzarella", 8500,
-            "Pizza de muzzarella", 10,
-            "pizza-muzzarella.jpg", true,
-            ["PEGAR_AQUI_EL_ID_DE_CATEGORIA"]
-        );
-
-        //consulta de productos en la bd
-        await obtenerProductos(db);
-
-        //modificar un producto por su id
-        await actualizarProducto(
-            db,
-            "PEGAR_AQUI_EL_ID_DE_PRODUCTO",
-            "Pizza napolitana", 8500,
-            "Pizza a la napolitana", 20,
-            "pizza-napolitana.jpg", true,
-            ["PEGAR_AQUI_EL_ID_DE_CATEGORIA"]
-        )
-
-        //eliminar un producto por su id
-        await eliminarProducto(
-            db,
-            "PEGAR_EL_ID_AQUI"
-        )
-
-        // ========================================================================================== //
-        //EJECUCION DEL CRUD DE USUARIOS
-        await crearUsuario(
-            db, 
-            "Juan Perez",
-            "jperes@mail.com",
-            "1123456789",
-            "calle falsa 123",
-            "cliente"
-        );
-
-        //consulta de usuarios en la db
-        await obtenerUsuarios(db);
-
-        //modificar un usuario por su id
-        await actualizarUsuario(
-            db,
-            "PEGAR_AQUI_EL_ID_DE_USUARIO",
-            "Carlos Perez", "cp@mail.com", "1123456789", "domicilio 123","cliente"
-        )
-
-        //eliminar un usuario por su id
-        await eliminarUsuario(
-            db,
-            "PEGAR_EL_ID_AQUI"
-        )
-
-        // ========================================================================================== //
-        //EJECUCION DEL CRUD DE PEDIDOS
+        //EJECUCION DEL MENU INICIAL
+        console.log("BIENVENIDO AL SISTEMA DE GESTION DE FOOD STORE")
+        await menuPrincipal(db);
         
-        // Creamos un pedido simulando  un ID de usuario y de producto
-        await crearPedido(
-            db,
-            "PEGAR_AQUI_EL_ID_DE_USUARIO",
-            [
-                {
-                    productoId: "PEGAR_AQUI_EL_ID_DE_PRODUCTO",
-                    cantidad: 2,
-                },
-                {
-                    productoId: "PEGAR_AQUI_EL_ID_DE_OTRO_PRODUCTO",
-                    cantidad: 3,
-                }
-            ]
-        );
-
-        // Consultar pedidos
-        await obtenerPedidos(db);
-
-        // Actualizar el estado del pedido (ej: pasar de "pendiente" a "pagado")
-        await actualizarEstadoPedido(
-            db,
-            "PEGAR_AQUI_EL_ID_DE_PEDIDO",
-            "pagado"
-        );
-
-        // Eliminar pedido lógicamente
-        await eliminarPedido(
-            db,
-            "PEGAR_AQUI_EL_ID_DE_PEDIDO"
-        );
     }
 
 
 // EJECUCION DEL PROGRAMA
 try {
-    const result = await main();
-    if (result) {
-    console.log("Procesos completados");
-    };
-
+     await main();
 } catch (error) {
-    console.error("Error al conectar o configurar MongoDB:", error);
+    console.error("Error en la aplicación:", error);
 } finally {
     await client.close();
-    console.log("Conexión cerrada.");
+    console.log("Conexión con la base de datos cerrada. Hasta la próxima!");
+    rl.close();
 }
 
