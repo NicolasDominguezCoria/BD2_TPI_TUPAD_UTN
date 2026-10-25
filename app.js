@@ -148,7 +148,6 @@ async function crearProducto(
         console.log("Error: Ya existe un producto con el nombre " + nombre);
         return null;
     }
-    const { ObjectId } = await import("mongodb");
 
     const nuevoProducto = {
         nombre: nombre,
@@ -199,7 +198,6 @@ async function actualizarProducto(
     nuevoDisponible,
     nuevoIdsCategorias
 ) {
-    const { ObjectId } = await import("mongodb");
 
     const resultado = await db
         .collection("productos")
@@ -318,7 +316,7 @@ async function actualizarUsuario(
     nuevaDireccion,
     nuevoRol
 ) {
-    const { ObjectId } = await import("mongodb");
+    
 
     const resultado = await db
         .collection("usuarios")
