@@ -1,4 +1,3 @@
-
 //importacion del driver y gestor de ObjectId
 import { MongoClient, ObjectId } from "mongodb";
 
@@ -14,16 +13,16 @@ const rl = createInterface({ input, output });
 //funcion para introducir informacion con un input
 async function preguntar(mensaje) {
     return await rl.question(mensaje);
-}
+};
 
 //coneccion con el servidor y la base de datos
 const url = process.env.MONGODB_URI;
 const dbName = process.env.DB_NAME;
 const client = new MongoClient(url);
 
-//=================================
+//===========================================================================================
 // FUNCIONES CRUD
-//=================================
+//===========================================================================================
 
 // ==== CRUD CATEGORIAS =============================================================== //
 
@@ -56,7 +55,7 @@ async function crearCategoria(db, nombre, descripcion) { //pasamos solo los atri
     console.log("ID de la categoría:", resultado.insertedId);
 
     return resultado.insertedId;
-}
+};
 
 // 2. Obtener categorias(READ)
 async function obtenerCategorias(db) {
@@ -72,7 +71,7 @@ async function obtenerCategorias(db) {
     });
 
     return categorias;
-}
+};
 
 // 3. Actualizar categoria(UPDATE)
 async function actualizarCategoria(db, id, nuevoNombre, nuevaDescripcion) { //vamos a proveer como parametros el id, un nuevo nombre y una nueva descripción
@@ -99,7 +98,7 @@ async function actualizarCategoria(db, id, nuevoNombre, nuevaDescripcion) { //va
     console.log("Documentos modificados:", resultado.modifiedCount);
 
     return true;
-}
+};
 
 // 4. Eliminar categoria (DELETE lógico)
 async function eliminarCategoria(db, id) { //pasamos como parametro el id del registro a eliminar de forma lógica
@@ -126,9 +125,7 @@ async function eliminarCategoria(db, id) { //pasamos como parametro el id del re
     console.log("Documentos modificados:", resultado.modifiedCount);
 
     return true;
-}
-
-
+};
 
 // ==== CRUD PRODUCTOS =============================================================== //
 //es bastante parecido al CRUD de categorias, la novedad de el campo tipo lista donde se pueden referenciar las categorias categorias
@@ -173,7 +170,7 @@ async function crearProducto(
     console.log("ID del producto: ", resultado.insertedId);
 
     return resultado.insertedId;
-}
+};
 
 // 2. Obtener Productos (READ)
 async function obtenerProductos(db) {
@@ -188,7 +185,7 @@ async function obtenerProductos(db) {
     });
 
     return productos;
-}
+};
 
 // 3.Actualizar producto (UPDATE)
 async function actualizarProducto(
@@ -229,7 +226,7 @@ async function actualizarProducto(
     console.log("Producto actualizado correctamente."); 
     console.log("Documentos modificados: ", resultado.modifiedCount);
     return true
-}
+};
 
 // 4. Eliminar producto (DELETE lógico)
 async function eliminarProducto(db, id) {
@@ -255,7 +252,7 @@ async function eliminarProducto(db, id) {
     console.log("Producto eliminada lógicamente.");
     console.log("Documentos modificados: ", resultado.modifiedCount);
     return true
-}
+};
 
 // ==== CRUD USUARIOS =============================================================== //
 //1. Crear un usuario (CREATE)
@@ -309,7 +306,7 @@ async function obtenerUsuarios(db) {
     })
 
     return usuarios;
-}
+};
 
 //3. actualizar usuario (UPDATE)
 async function actualizarUsuario(
@@ -346,7 +343,7 @@ async function actualizarUsuario(
         console.log("Usuario actualizado correctamente.");
         console.log("Documentos modificados: ", resultado.modifiedCount);
         return true
-}
+};
 
 //4. Eliminar usuario (DELETE lógico)
 async function eliminarUsuario(db, id) {
@@ -372,7 +369,7 @@ async function eliminarUsuario(db, id) {
     console.log("Usuario eliminado lógicamente.");
     console.log("Documentos modificados: ", resultado.modifiedCount);
     return true;
-}
+};
 
 // ==== CRUD PEDIDOS =============================================================== //
 
@@ -432,7 +429,7 @@ async function crearPedido(db, usuarioId, itemsPedido) {
         detallePedido: detalleProcesado,
         total: totalPedido,
         fecha: new Date(),
-        estado: "pendiente",
+        estado: "PENDIENTE",
         eliminado: false
     };
 
@@ -446,7 +443,7 @@ async function crearPedido(db, usuarioId, itemsPedido) {
 
     return resultado.insertedId;
 
-}
+};
 
 // 2. Obtener pedidos (READ)
 async function obtenerPedidos(db) {
@@ -461,7 +458,7 @@ async function obtenerPedidos(db) {
     });
 
     return pedidos;
-}
+};
 
 // 3. Actualizar estado del pedido (UPDATE)
 async function actualizarEstadoPedido(db, id, nuevoEstado) {
@@ -485,7 +482,7 @@ async function actualizarEstadoPedido(db, id, nuevoEstado) {
     console.log("Estado del pedido actualizado correctamente a:", nuevoEstado);
     console.log("Documentos modificados: ", resultado.modifiedCount);
     return true;
-}
+};
 
 // 4. Eliminar pedido (DELETE lógico)
 async function eliminarPedido(db, id) {
@@ -512,10 +509,11 @@ async function eliminarPedido(db, id) {
     console.log("Pedido eliminado lógicamente.");
     console.log("Documentos modificados: ", resultado.modifiedCount);
     return true;
-}
-//========================================
+};
+
+//============================================================================================================================
 // MENUS PARA INTERACCIÓN
-//========================================
+//===========================================================================================================================
 
 // === MENU DE INICIO ===================================== //
 
@@ -558,7 +556,7 @@ async function menuPrincipal(db) {
                 console.log("Opción inválida. Intente nuevamente.");
         }
     }
-}
+};
 
 // ======== SUB MENU para gestion de CATEGORIAS ======== 
 async function menuCategorias(db) {
@@ -617,7 +615,7 @@ async function menuCategorias(db) {
             console.log("No se pudo completar la operación: ", error);
         }
     }
-}
+};
 
 // ======== SUB MENU para gestion de PRODUCTOS ======== 
 async function menuProductos(db) {
@@ -726,7 +724,7 @@ async function menuProductos(db) {
             console.error("No se pudo completar la operación.", error);
         }
     }
-}
+};
 
 // ======== SUB MENU para gestion de USUARIOS ========
 async function menuUsuarios(db) {
@@ -811,7 +809,7 @@ async function menuUsuarios(db) {
             console.error("No se pudo completar la operación:", error);
         }
     }
-}
+};
 
 // ======== SUB MENU para gestion de PEDIDOS ========
 async function menuPedidos(db) {
@@ -840,7 +838,7 @@ async function menuPedidos(db) {
                     while (agregarOtro.toLowerCase() === "s") {
                         console.log("\n  AGREGAR PRODUCTO AL PEDIDO:");
 
-                        const productId = await preguntar("ID del producto: ");
+                        const productoId = await preguntar("ID del producto: ");
                         const cantidadTexto = await preguntar("Cantidad: ");
                         const cantidad = Number(cantidadTexto);
 
@@ -928,17 +926,19 @@ async function menuPedidos(db) {
             console.error("No se pudo completar la operación:", error);
         }
     }
-}
+};
 
 
-//==============================================================
+//=============================================================================================================================
 //   MAIN ejecución del programa
-//==============================================================
+//=============================================================================================================================
 
 async function main() {
     //conectar con el servidor base de datos de mongoDB
-    await client.connect();
+        await client.connect();
         console.log("Conexión exitosa al servidor MongoDB");
+        
+        
         //seleccion o creación de la bd
         const db = client.db(dbName);
         console.log(`Base de datos seleccionada: ${dbName}`);
@@ -977,8 +977,7 @@ async function main() {
         console.log("\n ======== BIENVENIDO AL SISTEMA DE GESTION DE FOOD STORE ========")
         await menuPrincipal(db);
         
-    }
-
+};
 
 // EJECUCION DEL PROGRAMA
 try {
@@ -989,5 +988,4 @@ try {
     await client.close();
     console.log("   Conexión con la base de datos cerrada. Hasta la próxima!");
     rl.close();
-}
-
+};
