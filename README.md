@@ -38,11 +38,7 @@ funciones CRUD de la coleccion categorias:
 - actualizarPedido()
 - eliminarPedido()
 
-Añadí en cada caso comentarios para explicar lo hecho. Realicé algunas validaciones y comprobaciones ya que estamos usando el driver nativo de mongo en vez de mongoose, aunque no es el objeto de la consigna que podrían agragarse algunas otras como la modificacion del stock de un producto cada vez que se hace un pedido. Pero cualquier cosa lo vemos.
+Al ejecutar la app inicia el Menu principal desde donde seleccionas que entidad queres gestionar, da hi navegas a los menues de cada entidad para realizar las operaciones crud. Recodar que cada vez que se coloca un ID se debe hacer sin las comillas.
 
-En la funcion main vas a ver que al inicio, estan las configuraciones necesarias para la conexion con la bd, tambien una configuración inicial que se lanza para crear la bd si no existe y las colecciones correspondientes si se inicia por primera vez la app y porsupuesto programada para no crearlas dos o mas veces saber si verifica que ya existen.
-
-En cuanto a las pruebas de los CRUD, vas a ver que hay campos donde indica que se debe introducir un ID, algo como "INGRESE_ID_AQUI". eso es para las partes donde hay colecciones referenciadas o embebidas. Esto lo indiqué asi porque como estoy trabajando ccon pruebas en local, mongo genera IDs diferentes a los que generará en el cluster de atlas. Cuando se pase a esta etapa alli deben colocarse los IDs correspondientes.
-
-lo único que estaría faltando sería programar el backup. Cualquier cosa estoy a tu disposición.
+faltaria trabajar en los pequeños detalles, el backup y estamos
 
