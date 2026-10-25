@@ -376,6 +376,16 @@ async function eliminarUsuario(db, id) {
 // 1. Crear un pedido (CREATE)
 async function crearPedido(db, usuarioId, itemsPedido) {
     
+    //Validar si el usuario existe en la coleccion
+    const usuariosCollection = db.collection("usuarios");
+    const usuarioExiste = await usuariosCollection.findOne({_id: new ObjectId(usuarioId), eliminado: false});
+
+    if (!usuarioExiste) {
+        throw new Error(
+            `No se encontró el usuario con ID ${usuarioId}`
+        );
+    }
+    
     // Validar y calcular totales recorriendo los ítems
     let totalPedido = 0; //inicializamos una variable para calcular el total en 0
     
@@ -391,7 +401,7 @@ async function crearPedido(db, usuarioId, itemsPedido) {
                 eliminado: false
             });
         
-        //comprobamos que el producto existe y no esté eliminado = true
+        //comprobamos que el producto existe y no esté en estado eliminado = true
         if (!producto) {
             throw new Error(
                 `No se encontró el producto con ID ${item.productoId}`
