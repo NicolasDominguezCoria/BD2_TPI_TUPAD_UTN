@@ -383,11 +383,21 @@ async function crearPedido(db, usuarioId, itemsPedido) {
             `No se encontró el usuario con ID ${usuarioId}`
         );
     }
+
+    //Construi usuario embebido para pedido
+    const usuarioEmbebido = {
+    usuarioId : usuarioExiste._id,
+    nombreCompleto : usuarioExiste.nombreCompleto,
+    email : usuarioExiste.email,
+    telefono : usuarioExiste.telefono,
+    direccion : usuarioExiste.direccion,
+    rol : usuarioExiste.rol
+    };
     
     // Validar y calcular totales recorriendo los ítems
     let totalPedido = 0; //inicializamos una variable para calcular el total en 0
     
-    
+    const actualizacionesStock = [];
     const detalleProcesado = [];
 
     for(const item of itemsPedido) {
@@ -413,6 +423,16 @@ async function crearPedido(db, usuarioId, itemsPedido) {
             );
         }
 
+        //calculamos el nuevo stock y la nueva disponibilidad del producto
+        const nuevoStock = producto.stock - item.cantidad;
+        const nuevaDisponibilidad = nuevoStock > 0;
+
+        // Agregamos el stock actualizado a productos
+        actualizacionesStock.push ({
+        productoId : producto._id,
+        nuevoStock : nuevoStock,
+        nuevaDisponibilidad : nuevaDisponibilidad});
+
         // Tomamos los datos directamente del producto encontrado
         const nombreProducto = producto.nombre;
         const precioUnitario = producto.precio;
@@ -431,9 +451,28 @@ async function crearPedido(db, usuarioId, itemsPedido) {
         });
     }
 
+    //Actualizamos el stock de los productos en la base de datos
+    for (const actualizacion of actualizacionesStock) {
+    await db
+        .collection("productos")
+        .updateOne(
+            {
+                _id: actualizacion.productoId,
+                eliminado: false
+            },
+            {
+                $set: {
+                    stock: actualizacion.nuevoStock,
+                    disponible: actualizacion.nuevaDisponibilidad
+                }
+            }
+        );
+    }
+
     // Construimos el documento del pedido
     const nuevoPedido = {
         usuarioId: new ObjectId(usuarioId),
+        usuario: usuarioEmbebido,
         detallePedido: detalleProcesado,
         total: totalPedido,
         fecha: new Date(),
